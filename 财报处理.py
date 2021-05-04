@@ -86,10 +86,7 @@ df8=df0
 df8=df8.drop(index=df8.index)
 
 #流动资产排序
-'''
-dict51={'货币资金':df5.loc['货币资金'].sum().round(1),'交易性金融资产':df5.loc['交易性金融资产'].sum().round(1),'应收票据':df5.loc['应收票据'].sum().round(1),'应收账款':df5.loc['应收账款'].sum().round(1),'预付账款':df5.loc['预付账款'].sum().round(1),'应收股利':df5.loc['应收股利'].sum().round(1),'应收利息':df5.loc['应收利息'].sum().round(1),'其他应收款':df5.loc['其他应收款'].sum().round(1),'存货':df5.loc['存货'].sum().round(1),'待摊费用':df5.loc['待摊费用'].sum().round(1),'一年内到期的非流动资产':df5.loc['一年内到期的非流动资产'].sum().round(1),'其他流动资产':df5.loc['其他流动资产'].sum().round(1)}
-list51=sorted(dict51.items(),key=lambda item:item[1])
-'''
+
 list51=paixu(['交易性金融资产','应收票据','应收账款','预付账款','其他应收款','存货','待摊费用','一年内到期的非流动资产','其他流动资产'],df5)
 df8.loc['总资产']=df5.loc['资产总计']
 df8.loc['流动资产']=df5.loc['流动资产合计']
@@ -143,15 +140,7 @@ df9.loc['收现率']=df0.loc['收现率'].round(2)
 df9.loc['利息保障倍数']=df0.loc['利息保障倍数'].round(2)
 
 #运营能力
-'''
-df9.loc['应收账款周转天数']=df0.loc['应收账款周转天数'].round(1)
-df9.loc['存货周转天数']=df0.loc['存货周转天数'].round(1)
-df9.loc['应付账款周转天数']=df0.loc['应付账款周转天数'].round(1)
-df9.loc['预收账款周转天数']=df0.loc['预收账款周转天数'].round(1)
-df9.loc['预付账款周转天数']=df0.loc['预付账款周转天数'].round(1)
 
-df9.loc['现金周期']=df0.loc['现金周期'].round(1)
-'''
 list55=paixu(['应收账款周转天数','存货周转天数','应付账款周转天数','预收账款周转天数','预付账款周转天数'],df0)
 df9.loc[list55[-1][0]]=df0.loc[list55[-1][0]].round(1)
 df9.loc[list55[-2][0]]=df0.loc[list55[-2][0]].round(1)
