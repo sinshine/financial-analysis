@@ -1,24 +1,22 @@
 import pandas as pd
+from docx import Document
 
-df1=pd.read_excel('公司授信客户财务分析模型2021.xlsx', sheet_name='表1资产负债表', skiprows=1)
-df1=df1.iloc[0:69, 0:1]
-df1.columns=['类别']
+df1=pd.read_excel('财务报表.xlsx', sheet_name='表1资产负债表')
+
 df1=df1.set_index('类别')
 
-df2=pd.read_excel('公司授信客户财务分析模型2021.xlsx', sheet_name='表2利润表', skiprows=1)
-df2=df2.iloc[0:17, 0:1]
-df2.columns=['类别']
+df2=pd.read_excel('财务报表.xlsx', sheet_name='表2利润表')
+
 df2=df2.set_index('类别')
 
-df3=pd.read_excel('公司授信客户财务分析模型2021.xlsx', sheet_name='表3现金流量', skiprows=1)
-df3=df3.iloc[0:36, 0:1]
-df3.columns=['类别']
+df3=pd.read_excel('财务报表.xlsx', sheet_name='表3现金流量')
+
 df3=df3.set_index('类别')
 
-df4=pd.read_excel('财务报表.xlsx', sheet_name='三表合一', skiprows=1).set_index('类别')
+
 
 #资产负债表
-df5=pd.merge(df1, df4, on='类别', how='left').astype(float)
+df5=df1
 df5=df5.fillna(0)
 
 df5.loc['其他流动资产']=df5.loc['流动资产合计']-df5.loc['货币资金']-df5.loc['交易性金融资产']-df5.loc['应收票据']-df5.loc['应收账款']-df5.loc['预付账款']-df5.loc['应收股利']-df5.loc['应收利息']-df5.loc['其他应收款']-df5.loc['存货']-df5.loc['待摊费用']-df5.loc['一年内到期的非流动资产']
@@ -33,26 +31,16 @@ df5.loc['负债总额']=df5.loc['流动负债合计']+df5.loc['非流动负债�
 df5=df5.round(2)
 
 #利润表
-df4.loc['一、营业收入']=df4.loc['营业总收入']
-df4.loc['减：营业成本']=df4.loc['减：营业成本']+df4.loc['其中：营业成本']
-df4.loc['　　营业税金']=df4.loc['　　营业税金']+df4.loc['税金及附加']
-df4.loc['　　销售费用']=df4.loc['　　销售费用']+df4.loc['销售费用']
-df4.loc['　　管理费用']=df4.loc['管理费用']
-df4.loc['　　财务费用（收益以“-”号填列）']=df4.loc['财务费用']
-df4.loc['二、营业利润（亏损以“－”号填列）']=df4.loc['营业利润']
-df4.loc['三、利润总额（亏损总额以“－”号填列）']=df4.loc['利润总额']
-df4.loc['减：所得税']=df4.loc['减：所得税费用']
-df4.loc['四、净利润（净亏损以“－”号填列）']=df4.loc['净利润']
 
-df6=pd.merge(df2, df4, on='类别', how='left').astype(float)
+df6=df2
 df6=df6.fillna(0)
 
 
 
 #现金流量表
-df4.loc['期末净现金流量']=df4.loc['五、现金及现金等价物净增加额']
 
-df7=pd.merge(df3, df4, on='类别', how='left').astype(float)
+
+df7=df3
 df7=df7.fillna(0)
 #df7.loc['期末净现金流量']=df7.loc['经营活动产生的现金流量净额']+df7.loc['投资活动产生的现金流量净额']+df7.loc['筹资活动产生的现金流量净额']+df7.loc['汇率变动影响']
 
@@ -198,40 +186,7 @@ df9.loc['筹资活动净现金流']=df7.loc['筹资活动产生的现金流量�
 df9.loc['净现金流']=df7.loc['期末净现金流量'].round(1)
 
 
-
-from docx import Document
-from docx.shared import Inches
-import re
-
 doc2 = Document()
-
-
-def addtable(doc,df):
-# add a table to the end and create a reference variable
-# extra row is so we can add the header row
-    t = doc.add_table(df.shape[0]+1, df.shape[1]+1)
-# add the header rows.
-    for j in range(df.shape[-1]):
-        t.cell(0,j+1).text = df.columns[j]
-# add the rest of the data frame
-    for i in range(df.shape[0]):
-        for j in range(df.shape[-1]):
-            t.cell(i+1,j+1).text = str(df.values[i,j])
-            t.cell(i+1,0).text=str(df.index[i])
-
-def find(text1):
-    list2=[]
-    for t in doc.tables:
-        for i in range(len(t.rows)-1):
-            for j in range(len(t.columns)-1):
-                rst=re.findall(text1,t.cell(i,j).text)
-                for r in rst:
-                    list2.append(t.cell(i,j+1).text)
-    return list2
-
-
-
-
 
 #财务简表
 df8=df8[df8.columns[-4:]]
@@ -298,12 +253,38 @@ t7="整体来看，借款人偿债能力【】，盈利能力【】，运营能�
 doc2.add_heading('一、财务报表分析', 0)
 doc2.add_paragraph('关注并表范围是否有变化！对企业影响比较大的会计政策和会计估计是否有变化！')
 doc2.add_heading('偿债能力分析', 0)
-#doc2.add_paragraph('重点关注资产、负债、权益的结构，以及是否存在需要还原！')
-#doc2.add_paragraph('变现性：对于流动资产尤为重要。应关注应收账款的账龄，判断其回收的难度。存货的周转及变现能力等。')
-#doc2.add_paragraph('被利用性：主要针对非流动资产。固定资产应关注其产能利用率，如果长期闲置则无法产生收入，拖累企业运营。无形资产应关注其构成，一般土地、特许经营权都是比较有价值的，专利等则要具体分析。')
-#doc2.add_paragraph('增值性：资产主要采用历史成本法计价，要关注资产账面价值与实际价值之间的差异。土地可能比账面价值更值钱，而机器设备、专用厂房等由于专用性较强，可变现价值往往远低于账面价值。')
-#doc2.add_paragraph('与其他资产组合的增值能力：企业的资产之间应有相互关联，部分企业多元化投资倾向较强，产业之间没有协同效应，风险程度比较高。')
-#doc2.add_paragraph('与负债的期限匹配情况：资产和负债的期限应基本匹配，流动负债主要用于流动资产，若短债长用情况太严重，可能产生流动性风险。')
+doc2.add_paragraph('重点关注资产、负债、权益的结构，以及是否存在需要还原！')
+t1=doc2.add_paragraph(t1)
+t1.add_run(commit1)
+t1.add_run(t5)
+t1.add_run(t2)
+
+doc2.add_paragraph('变现性：对于流动资产尤为重要。应关注应收账款的账龄，判断其回收的难度。存货的周转及变现能力等。')
+doc2.add_paragraph('被利用性：主要针对非流动资产。固定资产应关注其产能利用率，如果长期闲置则无法产生收入，拖累企业运营。无形资产应关注其构成，一般土地、特许经营权都是比较有价值的，专利等则要具体分析。')
+doc2.add_paragraph('增值性：资产主要采用历史成本法计价，要关注资产账面价值与实际价值之间的差异。土地可能比账面价值更值钱，而机器设备、专用厂房等由于专用性较强，可变现价值往往远低于账面价值。')
+doc2.add_paragraph('与其他资产组合的增值能力：企业的资产之间应有相互关联，部分企业多元化投资倾向较强，产业之间没有协同效应，风险程度比较高。')
+doc2.add_paragraph('与负债的期限匹配情况：资产和负债的期限应基本匹配，流动负债主要用于流动资产，若短债长用情况太严重，可能产生流动性风险。')
+
+
+
+doc2.add_heading('盈利能力分析', 0)
+doc2.add_paragraph(t3)
+doc2.add_paragraph('关注利润结构，依靠自身经营获取的利润是否是主流（投资收益-靠别人经营，补贴收入-靠政府，营业外收入-靠运气）。关注利润率变化情况，与同业对比，过高或过低的利润率都应有合理解释。')
+doc2.add_paragraph('利息费用：利息费用/有息负债余额可以大致得到企业融资成本。毛利/经营活动净现金流高于利息费用是底线，否则企业需要借款还利息，类似庞氏骗局。在建工程产生的利息费用资本化，没有体现在利润表里，只能从现金流量表中找。')
+
+doc2.add_heading('营运能力分析', 0)
+doc2.add_paragraph(t6)
+doc2.add_heading('现金流情况', 0)
+doc2.add_paragraph(t4)
+doc2.add_paragraph('经营活动现金流：是收付实现制下的净利润，是归还固定资产贷款、融资利息、扩大再生产、归还经营性负债、分红的来源。注意排除其他应收款的扰动-收到、支付其他与经营活动有关的现金科目，剔除关联方相关资金扰动后再看造现能力。')
+doc2.add_paragraph('投资活动现金流：体现企业的扩张和收缩策略。对内扩张-固定资产、无形资产。对外扩张-股权投资。投资时要承担风险的-增加未来的不确定性。投资是要本钱的-挤占自有资金，带来新的负债。')
+doc2.add_paragraph('筹资活动现金流：吸收权益性资金-降低杠杆。对外借款-提高杠杆。结合取得借款收到、发行债券收到、偿还债务支付三个科目看债务资金是净流入还是净流出。分配股利、利润或偿付利息支付的科目把股权资金和债权资金的回报混在一起，带来了分析的障碍，应结合资产负债表中未分配利润和利润表中净利润的值进行判断。')
+
+doc2.add_heading('小结', 0)
+doc2.add_paragraph('财务报表中异常情况如果没有合理解释，很可能是财务粉饰造假的信号。')
+doc2.add_paragraph('可利用其他信息对财务报表进行验证，如用水、用电、职工工资、税收等外部信息，如银行流水判断经营情况，如通过上下游客户侧面了解其情况。')
+doc2.add_paragraph(t7)
+doc2.add_heading('二、重点科目分析', 0)
 doc2.add_paragraph('货币资金：关注受限制货币资金，受限资金一般是债务融资保证金，也可能是资本市场募集的有确定用途的股本金。在考虑企业流动性的时候应该将其剔除。关注存贷双高，拥有大量货币资金的同时还存在大量借款（做套利-存贷利差，内保外贷。钱刚刚借来还没用。）')
 doc2.add_paragraph('应收账款：关注应收账款的账龄，判断其回收的难度。账龄结构-看减值准备计提是否合理。对手方情况-若集中度较高，应分析对手方资信情况。增速是否与收入增速匹配-如增速高于收入增速，说明企业通过延长账期来获取收入，供应链地位一般，甚至有财务粉饰造假可能。')
 doc2.add_paragraph('存货：存货分为原材料、在产品、产成品、商品等类型，应分析存货结构，存货余额增幅等，关注存货的周转及变现能力。如果存货余额大增，存货周转率降低，要了解企业是因为销售不畅导致存货积压，还是在策略性的囤货（由于原材料存在上涨趋势而提前备货）？（建筑行业的工程施工已完成未结算在新报表已调整到合同资产）')
@@ -314,27 +295,7 @@ doc2.add_paragraph('长期股权投资：关注规模-生产型企业的长期�
 doc2.add_paragraph('无形资产：关注规模-无形资产占比不应过大。内容-土地所有权、特许经营权通常价值比较高，可以带来比较确定的现金流入，商标权、专利权等则应具体分析。')
 doc2.add_paragraph('商誉：并购中收购价款高于标的所有权权益的部分，只存在于合并报表中，没有并购的企业是没有商誉的。商誉不摊销，但需要做减值测试，如果商誉占比比较高，应研究并购标的的经营情况是否如预期一样好，或是否能为企业带来协同效益。如果为否，应考虑将其还原。')
 doc2.add_paragraph('预付账款：体现公司在产业链中的行业地位、业务模式和话语权，同时与存货及商品价格有关。关注预付账款应为核心业务相关的，巨额预付应关注。')
-t1=doc2.add_paragraph(t1)
-t1.add_run(commit1)
-t1.add_run(t5)
-t1.add_run(t2)
 
-doc2.add_heading('盈利能力分析', 0)
-doc2.add_paragraph('关注利润结构，依靠自身经营获取的利润是否是主流（投资收益-靠别人经营，补贴收入-靠政府，营业外收入-靠运气）。关注利润率变化情况，与同业对比，过高或过低的利润率都应有合理解释。')
-doc2.add_paragraph('利息费用：利息费用//有息负债余额可以大致得到企业融资成本。毛利//经营活动净现金流高于利息费用是底线，否则企业需要借款还利息，类似庞氏骗局。在建工程产生的利息费用资本化，没有体现在利润表里，只能从现金流量表中找。')
-doc2.add_paragraph(t3)
-doc2.add_heading('营运能力分析', 0)
-doc2.add_paragraph(t6)
-doc2.add_heading('现金流情况', 0)
-doc2.add_paragraph('经营活动现金流：是收付实现制下的净利润，是归还固定资产贷款、融资利息、扩大再生产、归还经营性负债、分红的来源。注意排除其他应收款的扰动-收到、支付其他与经营活动有关的现金科目，剔除关联方相关资金扰动后再看造现能力。')
-doc2.add_paragraph('投资活动现金流：体现企业的扩张和收缩策略。对内扩张-固定资产、无形资产。对外扩张-股权投资。投资时要承担风险的-增加未来的不确定性。投资是要本钱的-挤占自有资金，带来新的负债。')
-doc2.add_paragraph('筹资活动现金流：吸收权益性资金-降低杠杆。对外借款-提高杠杆。结合取得借款收到、发行债券收到、偿还债务支付三个科目看债务资金是净流入还是净流出。分配股利、利润或偿付利息支付的科目把股权资金和债权资金的回报混在一起，带来了分析的障碍，应结合资产负债表中未分配利润和利润表中净利润的值进行判断。')
-doc2.add_paragraph(t4)
-doc2.add_heading('小结', 0)
-doc2.add_paragraph('财务报表中异常情况如果没有合理解释，很可能是财务粉饰造假的信号。')
-doc2.add_paragraph('银行人员可利用自身独特的信息优势对财务报表进行验证，如用水、用电、职工工资、税收等外部信息，如银行流水判断经营情况，如通过借款人上下游客户侧面了解其情况。')
-doc2.add_paragraph(t7)
-doc2.add_heading('二、重点科目分析（发起报告）', 0)
 
 doc2.save('财务报表分析.docx')
 
