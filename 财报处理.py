@@ -198,68 +198,13 @@ df9.loc['筹资活动净现金流']=df7.loc['筹资活动产生的现金流量�
 df9.loc['净现金流']=df7.loc['期末净现金流量'].round(1)
 
 
-head='''<!DOCTYPE html>
-<html lang="en">
-<head>
-<title>财务报表分析</title>
-<meta charset="gbk">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<style type="text/css">
-html {
-    font-family: sans-serif;
-    -ms-text-size-adjust: 100%;
-    -webkit-text-size-adjust: 100%;
-}
-
-body {
-    margin: 10px;
-}
-table {
-    border-collapse: collapse;
-    border-spacing: 0;
-}
-
-td,th {
-    padding: 0;
-}
-
-</style>
-</head>
-<body>
-'''
-
-foot='''
-</body>
-</html>
-'''
-'''
-with open('df0.html', 'w') as f:
-    f.write(head)
-    f.write(df5.to_html())
-    f.write(df6.to_html())
-    f.write(df7.to_html())
-    f.write(df0.to_html())
-    f.write(df8.to_html())
-    f.write(df9.to_html())
-    f.write(foot)
-'''
 from docx import Document
 from docx.shared import Inches
 import re
 
-doc = Document('发起报告.docx')
 doc2 = Document()
 
-def wenzi(text1):
-    list1=[]
-    doc2.add_heading(text1, 0)
-    for p1 in doc.paragraphs:
-        ret=re.findall(text1,p1.text)
-        for r in ret:
-            if not p1.text in list1:
-                list1.append(p1.text)
-                doc2.add_paragraph(p1.text)
 
 def addtable(doc,df):
 # add a table to the end and create a reference variable
@@ -284,74 +229,16 @@ def find(text1):
                     list2.append(t.cell(i,j+1).text)
     return list2
 
-#表头
-'''
-tb1=doc2.add_table(10,4)
-tb1.cell(0,0).text='发起机构'
-tb1.cell(0,1).text=find('发起机构')
-tb1.cell(0,2).text='经营主责任人'
-tb1.cell(0,3).text=find('经营主责任人')
-tb1.cell(1,0).text='牵头审批人'
-tb1.cell(1,1).text=find('牵头审批人')
-tb1.cell(1,2).text='事前行使行政否决权'
-tb1.cell(1,3).text=find('事前行使行政否决权')
-tb1.cell(2,0).text='发起日期'
-tb1.cell(2,1).text=find('发起日期')
-tb1.cell(2,2).text='上期总量到期日'
-tb1.cell(2,3).text=find('上一期总量到期日')
-tb1.cell(3,0).text='企业性质'
-tb1.cell(3,1).text=find('客户性质')
-tb1.cell(3,2).text='借款人及担保人是否为我行关联方'
-tb1.cell(3,3).text=find('借款人及担保人是否为我行关联方')
-tb1.cell(4,0).text='近两年信用评级'
-tb1.cell(4,1).text=find('最近两期内部信用评级')
-tb1.cell(4,2).text='是否加强管理名单客户'
-tb1.cell(4,3).text=find('管控及高风险名单')
-tb1.cell(5,2).text='近三年五级分类'
-tb1.cell(5,3).text=find('存量授信近两年五级分类情况')
-tb1.cell(6,0).text='本期申请授信政策'
-tb1.cell(6,1).text=find('行业授信投向')
-tb1.cell(6,2).text='上期批复授信政策'
-tb1.cell(6,3).text=find('上期批复授信政策')
-tb1.cell(7,0).text='所属集团'
-tb1.cell(7,1).text=find('所属集团名称')
-tb1.cell(7,2).text='客户/集团层级'
-tb1.cell(7,3).text=find('客户分层')
-tb1.cell(8,0).text='切分集团额度及到期日'
-tb1.cell(8,1).text=find('切分集团额度及到期日')
-tb1.cell(8,2).text='是否符合集团授信策略'
-tb1.cell(8,3).text=find('是否符合集团授信策略')
-'''
 
-#doc2.add_heading('资产负债表', 0)
-#addtable(doc2,df5)
-#doc2.add_heading('利润表', 0)
-#addtable(doc2,df6)
-#doc2.add_heading('现金流量表', 0)
-#addtable(doc2,df7)
-#doc2.add_heading('指标汇总', 0)
-#addtable(doc2,df0)
-#doc2.add_heading('财务简表（第一页）', 0)
-#addtable(doc2,df8)
-#doc2.add_heading('财务简表（第二页）', 0)
-#addtable(doc2,df9)
+
+
 
 #财务简表
 df8=df8[df8.columns[-4:]]
 df9=df9[df9.columns[-4:]]
 df10=pd.concat([df8.reset_index(),df9.reset_index()],axis=1)
 df10.to_excel('财务简表.xlsx',encoding='gbk')
-'''
-doc2.add_heading('财务简表', 0)
-t = doc2.add_table(df10.shape[0]+1, df10.shape[1])
-# add the header rows.
-for j in range(df10.shape[-1]):
-    t.cell(0,j).text = df10.columns[j]
-# add the rest of the data frame
-for i in range(df10.shape[0]):
-    for j in range(df10.shape[-1]):
-        t.cell(i+1,j).text = str(df10.values[i,j])
-'''
+
 #平均数
 def avg(list1):
     avg=sum(list1)/len(list1)
@@ -449,39 +336,6 @@ doc2.add_paragraph('银行人员可利用自身独特的信息优势对财务报
 doc2.add_paragraph(t7)
 doc2.add_heading('二、重点科目分析（发起报告）', 0)
 
-
-wenzi(list51[-1][0])
-wenzi(list51[-2][0])
-wenzi(list51[-3][0])
-wenzi(list51[-4][0])
-wenzi(list51[-5][0])
-wenzi(list52[-1][0])
-wenzi(list52[-2][0])
-wenzi(list52[-3][0])
-wenzi(list53[-1][0])
-wenzi(list53[-2][0])
-wenzi(list53[-3][0])
-wenzi(list53[-4][0])
-wenzi(list53[-5][0])
-wenzi(list54[-1][0])
-wenzi(list54[-2][0])
-wenzi(list54[-3][0])
-
-
-doc2.add_paragraph('如有问题或建议请联系深圳市分行尽责审查三团队盛夏，感谢您的支持！')
 doc2.save('财务报表分析.docx')
-
-#调整word格式
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.shared import Pt
-
-for p in doc.paragraphs:
-    p.paragraph_format.line_spacing = 1.5
-    p.paragraph_format.space_before = Pt(24)
-    p.paragraph_format.space_after = Pt(12)
-    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-
-#doc.save("修改段落样式.docx")
-
 
 
