@@ -1,38 +1,41 @@
 import pandas as pd
 from docx import Document
 
-df1=pd.read_excel('财务报表.xlsx', sheet_name='表1资产负债表')
-
-df1=df1.set_index('类别')
-
-df2=pd.read_excel('财务报表.xlsx', sheet_name='表2利润表')
-
-df2=df2.set_index('类别')
-
-df3=pd.read_excel('财务报表.xlsx', sheet_name='表3现金流量')
-
-df3=df3.set_index('类别')
-
-
-
 #资产负债表
-df5=df1
-df5=df5.fillna(0)
-df5=df5.round(2)
-
+df1=pd.read_excel('财务报表.xlsx', sheet_name='表1资产负债表')
+df1=df1.set_index('类别')
+df1=df1.fillna(0)
+df1=df1.round(2)
 #利润表
-
-df6=df2
-df6=df6.fillna(0)
-
-
-
+df2=pd.read_excel('财务报表.xlsx', sheet_name='表2利润表')
+df2=df2.set_index('类别')
+df2=df2.fillna(0)
+df2=df2.round(2)
 #现金流量表
+df3=pd.read_excel('财务报表.xlsx', sheet_name='表3现金流量')
+df3=df3.set_index('类别')
+df3=df3.fillna(0)
+df3=df3.round(2)
 
+#年报还是月报
+if df2.columns[-1][-1]=='月':
+    if df2.columns[-1][-2]=='0':
+        df2[df2.columns[-1]]=df2[df2.columns[-1]]*12/10
+    elif df2.columns[-1][-2]=='1':
+        if df2.columns[-1][-3]=='年':
+            df2[df2.columns[-1]]=df2[df2.columns[-1]]*12/1
+        elif df2.columns[-1][-3]=='1':
+            df2[df2.columns[-1]]=df2[df2.columns[-1]]*12/11
+    elif df2.columns[-1][-2]=='2':
+        if df2.columns[-1][-3]=='年':
+            df2[df2.columns[-1]]=df2[df2.columns[-1]]*12/2
+        elif df2.columns[-1][-3]=='1':
+            df2[df2.columns[-1]]=df2[df2.columns[-1]]*12/12
+    else:
+        df2[df2.columns[-1]]=df2[df2.columns[-1]]*12/df2.columns[-1][-2]
+else:
+    pass
 
-df7=df3
-df7=df7.fillna(0)
-#df7.loc['期末净现金流量']=df7.loc['经营活动产生的现金流量净额']+df7.loc['投资活动产生的现金流量净额']+df7.loc['筹资活动产生的现金流量净额']+df7.loc['汇率变动影响']
 
 
 #排序函数
@@ -43,43 +46,62 @@ def paixu(list1,df1):
     dict1=sorted(dict1.items(),key=lambda item:item[1])
     return dict1
 
+#平均数
+def avg(list1):
+    avg=sum(list1)/len(list1)
+    return avg
+
+#判断
+def panduan(df9,text9):
+    if df9.loc[text9][-3]<df9.loc[text9][-2]<df9.loc[text9][-1]:
+        commit1 = text9+'持续增加，平均增长率为'+'{:.0%}'.format((((df9.loc[text9][-1]/df9.loc[text9][-3])-1)/2))
+    elif df9.loc[text9][-3]>df9.loc[text9][-2]>df9.loc[text9][-1]:
+        commit1 = text9+'持续下降，平均降幅为'+'{:.0%}'.format((((df9.loc[text9][-1]/df9.loc[text9][-3])-1)/2))
+    elif df9.loc[text9][-3]==df9.loc[text9][-2]==df9.loc[text9][-1]==0:
+        commit1 = '一直为0。'
+    else:
+        num = avg([df9.loc[text9][-3],df9.loc[text9][-2],df9.loc[text9][-1]])
+        commit1 = '平均值为{:.2f}。'.format(num)
+    return commit1
+
+
 #指标汇总
-df0=df5
+df0=df1
 df0=df0.drop(index=df0.index)
 #偿债能力指标
-df0.loc['资产负债率']=df5.loc['负债总计']/df5.loc['资产总计']
-df0.loc['流动比率']=df5.loc['流动资产合计']/df5.loc['流动负债合计']
-df0.loc['速动比率']=(df5.loc['流动资产合计']-df5.loc['存货'])/df5.loc['流动负债合计']
-df0.loc['现金比率']=(df5.loc['货币资金']+df5.loc['交易性金融资产'])/df5.loc['流动负债合计']
-df0.loc['利息保障倍数']=(df6.loc['四、利润总额（亏损以“－”号填列）']+df6.loc['财务费用'])/df6.loc['财务费用']
+df0.loc['资产负债率']=df1.loc['负债总计']/df1.loc['资产总计']
+df0.loc['流动比率']=df1.loc['流动资产合计']/df1.loc['流动负债合计']
+df0.loc['速动比率']=(df1.loc['流动资产合计']-df1.loc['存货'])/df1.loc['流动负债合计']
+df0.loc['现金比率']=(df1.loc['货币资金']+df1.loc['交易性金融资产'])/df1.loc['流动负债合计']
+df0.loc['利息保障倍数']=(df2.loc['四、利润总额（亏损以“－”号填列）']+df2.loc['财务费用'])/df2.loc['财务费用']
 
 #经营周转指标
-df0.loc['应收账款周转率（次）']=df6.loc['一、营业总收入']*2/(df5.loc['应收账款']+df5.loc['应收账款'].shift(1))
-df0.loc['存货周转率（次）']=df6.loc['其中：营业成本']*2/(df5.loc['存货']+df5.loc['存货'].shift(1))
-df0.loc['应付账款周转率（次）']=df6.loc['其中：营业成本']*2/(df5.loc['应付账款']+df5.loc['应付账款'].shift(1))
-df0.loc['预收账款周转率（次）']=df6.loc['一、营业总收入']*2/(df5.loc['预收账款']+df5.loc['预收账款'].shift(1))
-df0.loc['预付账款周转率（次）']=df6.loc['其中：营业成本']*2/(df5.loc['预付账款']+df5.loc['预付账款'].shift(1))
+df0.loc['应收账款周转率（次）']=df2.loc['一、营业总收入']*2/(df1.loc['应收账款']+df1.loc['应收账款'].shift(1))
+df0.loc['存货周转率（次）']=df2.loc['其中：营业成本']*2/(df1.loc['存货']+df1.loc['存货'].shift(1))
+df0.loc['应付账款周转率（次）']=df2.loc['其中：营业成本']*2/(df1.loc['应付账款']+df1.loc['应付账款'].shift(1))
+df0.loc['预收账款周转率（次）']=df2.loc['一、营业总收入']*2/(df1.loc['预收账款']+df1.loc['预收账款'].shift(1))
+df0.loc['预付账款周转率（次）']=df2.loc['其中：营业成本']*2/(df1.loc['预付账款']+df1.loc['预付账款'].shift(1))
 df0.loc['应收账款周转天数']=360/df0.loc['应收账款周转率（次）']
 df0.loc['存货周转天数']=360/df0.loc['存货周转率（次）']
 df0.loc['应付账款周转天数']=360/df0.loc['应付账款周转率（次）']
 df0.loc['预收账款周转天数']=360/df0.loc['预收账款周转率（次）']
 df0.loc['预付账款周转天数']=360/df0.loc['预付账款周转率（次）']
 df0.loc['现金周期']=df0.loc['应收账款周转天数']+df0.loc['存货周转天数']-df0.loc['应付账款周转天数']-df0.loc['预收账款周转天数']+df0.loc['预付账款周转天数']
-df0.loc['收现率']=df7.loc['销售商品、提供劳务收到的现金']/df6.loc['一、营业总收入']
+df0.loc['收现率']=df3.loc['销售商品、提供劳务收到的现金']/df2.loc['一、营业总收入']
 
 #盈利指标
-df0.loc['成本占比']=df6.loc['其中：营业成本']/df6.loc['一、营业总收入']
+df0.loc['成本占比']=df2.loc['其中：营业成本']/df2.loc['一、营业总收入']
 df0.loc['毛利润率']=1-df0.loc['成本占比']
-df0.loc['营业利润率']=df6.loc['三、营业利润（亏损以“－”号填列）']/df6.loc['一、营业总收入']
-df0.loc['销售利润率']=(df6.loc['一、营业总收入']-df6.loc['其中：营业成本']-df6.loc['税金及附加']-df6.loc['销售费用'])/df6.loc['一、营业总收入']
-df0.loc['净利润率']=df6.loc['五、净利润（亏损以“－”号填列）']/df6.loc['一、营业总收入']
-df0.loc['EBIT']=(df6.loc['五、净利润（亏损以“－”号填列）']+df6.loc['减：所得税费用']+df6.loc['其中：利息费用'])/10000
-df0.loc['总资产收益率']=df6.loc['五、净利润（亏损以“－”号填列）']*2/(df5.loc['资产总计']+df5.loc['资产总计'].shift(1))
-df0.loc['净资产收益率']=df6.loc['五、净利润（亏损以“－”号填列）']*2/(df5.loc['所有者权益合计']+df5.loc['所有者权益合计'].shift(1))
+df0.loc['营业利润率']=df2.loc['三、营业利润（亏损以“－”号填列）']/df2.loc['一、营业总收入']
+df0.loc['销售利润率']=(df2.loc['一、营业总收入']-df2.loc['其中：营业成本']-df2.loc['税金及附加']-df2.loc['销售费用'])/df2.loc['一、营业总收入']
+df0.loc['净利润率']=df2.loc['五、净利润（亏损以“－”号填列）']/df2.loc['一、营业总收入']
+df0.loc['EBIT']=(df2.loc['五、净利润（亏损以“－”号填列）']+df2.loc['减：所得税费用']+df2.loc['其中：利息费用'])/10000
+df0.loc['总资产收益率']=df2.loc['五、净利润（亏损以“－”号填列）']*2/(df1.loc['资产总计']+df1.loc['资产总计'].shift(1))
+df0.loc['净资产收益率']=df2.loc['五、净利润（亏损以“－”号填列）']*2/(df1.loc['所有者权益合计']+df1.loc['所有者权益合计'].shift(1))
 
 #报表勾稽关系
-df0.loc['报表所得税纳税比例']=df6.loc['减：所得税费用']/df6.loc['四、利润总额（亏损以“－”号填列）']
-df0.loc['当年利润与年初年末未分配利润差额的匹配情况']=df5.loc['未分配利润'].shift(1)+df6.loc['五、净利润（亏损以“－”号填列）']-df5.loc['未分配利润']
+df0.loc['报表所得税纳税比例']=df2.loc['减：所得税费用']/df2.loc['四、利润总额（亏损以“－”号填列）']
+df0.loc['当年利润与年初年末未分配利润差额的匹配情况']=df1.loc['未分配利润'].shift(1)+df2.loc['五、净利润（亏损以“－”号填列）']-df1.loc['未分配利润']
 
 #财务简表(第一页）
 df8=df0
@@ -87,45 +109,45 @@ df8=df8.drop(index=df8.index)
 
 #流动资产排序
 
-list51=paixu(['交易性金融资产','应收票据','应收账款','预付账款','其他应收款','存货','待摊费用','一年内到期的非流动资产','其他流动资产'],df5)
-df8.loc['总资产']=df5.loc['资产总计']
-df8.loc['流动资产']=df5.loc['流动资产合计']
-df8.loc['货币资金']=df5.loc['货币资金']
-df8.loc[list51[-1][0]]=df5.loc[list51[-1][0]]
-df8.loc[list51[-2][0]]=df5.loc[list51[-2][0]]
-df8.loc[list51[-3][0]]=df5.loc[list51[-3][0]]
-df8.loc[list51[-4][0]]=df5.loc[list51[-4][0]]
+list51=paixu(['交易性金融资产','应收票据','应收账款','预付账款','其他应收款','存货','待摊费用','一年内到期的非流动资产','其他流动资产'],df1)
+df8.loc['总资产']=df1.loc['资产总计']
+df8.loc['流动资产']=df1.loc['流动资产合计']
+df8.loc['货币资金']=df1.loc['货币资金']
+df8.loc[list51[-1][0]]=df1.loc[list51[-1][0]]
+df8.loc[list51[-2][0]]=df1.loc[list51[-2][0]]
+df8.loc[list51[-3][0]]=df1.loc[list51[-3][0]]
+df8.loc[list51[-4][0]]=df1.loc[list51[-4][0]]
 
 
 #非流动资产排序
-dict52={'可供出售金融资产':df5.loc['可供出售金融资产'].sum().round(1),'持有至到期投资':df5.loc['持有至到期投资'].sum().round(1),'投资性房地产':df5.loc['投资性房地产'].sum().round(1),'长期股权投资':df5.loc['长期股权投资'].sum().round(1),'长期应收款':df5.loc['长期应收款'].sum().round(1),'固定资产':df5.loc['固定资产'].sum().round(1),'在建工程':df5.loc['在建工程'].sum().round(1),'生产性生物资产':df5.loc['生产性生物资产'].sum().round(1),'油气资产':df5.loc['油气资产'].sum().round(1),'无形资产':df5.loc['无形资产'].sum().round(1),'开发支出':df5.loc['开发支出'].sum().round(1),'商誉':df5.loc['商誉'].sum().round(1),'长期待摊费用':df5.loc['长期待摊费用'].sum().round(1),'递延所得税资产':df5.loc['递延所得税资产'].sum().round(1),'其他非流动资产':df5.loc['其他非流动资产'].sum().round(1)}
+dict52={'可供出售金融资产':df1.loc['可供出售金融资产'].sum().round(1),'持有至到期投资':df1.loc['持有至到期投资'].sum().round(1),'投资性房地产':df1.loc['投资性房地产'].sum().round(1),'长期股权投资':df1.loc['长期股权投资'].sum().round(1),'长期应收款':df1.loc['长期应收款'].sum().round(1),'固定资产':df1.loc['固定资产'].sum().round(1),'在建工程':df1.loc['在建工程'].sum().round(1),'生产性生物资产':df1.loc['生产性生物资产'].sum().round(1),'油气资产':df1.loc['油气资产'].sum().round(1),'无形资产':df1.loc['无形资产'].sum().round(1),'开发支出':df1.loc['开发支出'].sum().round(1),'商誉':df1.loc['商誉'].sum().round(1),'长期待摊费用':df1.loc['长期待摊费用'].sum().round(1),'递延所得税资产':df1.loc['递延所得税资产'].sum().round(1),'其他非流动资产':df1.loc['其他非流动资产'].sum().round(1)}
 list52=sorted(dict52.items(),key=lambda item:item[1])
 
-df8.loc['非流动资产']=df5.loc['非流动资产合计']
-df8.loc[list52[-1][0]]=df5.loc[list52[-1][0]]
-df8.loc[list52[-2][0]]=df5.loc[list52[-2][0]]
-df8.loc[list52[-3][0]]=df5.loc[list52[-3][0]]
+df8.loc['非流动资产']=df1.loc['非流动资产合计']
+df8.loc[list52[-1][0]]=df1.loc[list52[-1][0]]
+df8.loc[list52[-2][0]]=df1.loc[list52[-2][0]]
+df8.loc[list52[-3][0]]=df1.loc[list52[-3][0]]
 
 #负债排序
-dict53={'短期借款':df5.loc['短期借款'].sum().round(1),'交易性金融负债':df5.loc['交易性金融负债'].sum().round(1),'应付票据':df5.loc['应付票据'].sum().round(1),'应付账款':df5.loc['应付账款'].sum().round(1),'预收账款':df5.loc['预收账款'].sum().round(1),'应付职工薪酬':df5.loc['应付职工薪酬'].sum().round(1),'应交税费':df5.loc['应交税费'].sum().round(1),'其他应付款':df5.loc['其他应付款'].sum().round(1),'预计负债':df5.loc['预计负债'].sum().round(1),'一年内到期的长期负债':df5.loc['一年内到期的长期负债'].sum().round(1),'其他流动负债':df5.loc['其他流动负债'].sum().round(1),'长期借款':df5.loc['长期借款'].sum().round(1),'应付债券':df5.loc['应付债券'].sum().round(1),'长期应付款':df5.loc['长期应付款'].sum().round(1),'递延所得税负债':df5.loc['递延所得税负债'].sum().round(1),'其他非流动负债':df5.loc['其他非流动负债'].sum().round(1)}
+dict53={'短期借款':df1.loc['短期借款'].sum().round(1),'交易性金融负债':df1.loc['交易性金融负债'].sum().round(1),'应付票据':df1.loc['应付票据'].sum().round(1),'应付账款':df1.loc['应付账款'].sum().round(1),'预收账款':df1.loc['预收账款'].sum().round(1),'应付职工薪酬':df1.loc['应付职工薪酬'].sum().round(1),'应交税费':df1.loc['应交税费'].sum().round(1),'其他应付款':df1.loc['其他应付款'].sum().round(1),'预计负债':df1.loc['预计负债'].sum().round(1),'一年内到期的长期负债':df1.loc['一年内到期的长期负债'].sum().round(1),'其他流动负债':df1.loc['其他流动负债'].sum().round(1),'长期借款':df1.loc['长期借款'].sum().round(1),'应付债券':df1.loc['应付债券'].sum().round(1),'长期应付款':df1.loc['长期应付款'].sum().round(1),'递延所得税负债':df1.loc['递延所得税负债'].sum().round(1),'其他非流动负债':df1.loc['其他非流动负债'].sum().round(1)}
 list53=sorted(dict53.items(),key=lambda item:item[1])
-df8.loc['总负债']=df5.loc['负债总计']
-df8.loc[list53[-1][0]]=df5.loc[list53[-1][0]]
-df8.loc[list53[-2][0]]=df5.loc[list53[-2][0]]
-df8.loc[list53[-3][0]]=df5.loc[list53[-3][0]]
-df8.loc[list53[-4][0]]=df5.loc[list53[-4][0]]
-df8.loc[list53[-5][0]]=df5.loc[list53[-5][0]]
+df8.loc['总负债']=df1.loc['负债总计']
+df8.loc[list53[-1][0]]=df1.loc[list53[-1][0]]
+df8.loc[list53[-2][0]]=df1.loc[list53[-2][0]]
+df8.loc[list53[-3][0]]=df1.loc[list53[-3][0]]
+df8.loc[list53[-4][0]]=df1.loc[list53[-4][0]]
+df8.loc[list53[-5][0]]=df1.loc[list53[-5][0]]
 
 #所有者权益排序
-dict54={'实收资本（或股本）':df5.loc['实收资本（或股本）'].sum().round(1),'资本公积':df5.loc['资本公积'].sum().round(1),'盈余公积':df5.loc['盈余公积'].sum().round(1),'一般风险准备':df5.loc['一般风险准备'].sum().round(1),'未分配利润':df5.loc['未分配利润'].sum().round(1)}
+dict54={'实收资本（或股本）':df1.loc['实收资本（或股本）'].sum().round(1),'资本公积':df1.loc['资本公积'].sum().round(1),'盈余公积':df1.loc['盈余公积'].sum().round(1),'一般风险准备':df1.loc['一般风险准备'].sum().round(1),'未分配利润':df1.loc['未分配利润'].sum().round(1)}
 list54=sorted(dict54.items(),key=lambda item:item[1])
-df8.loc['所有者权益']=df5.loc['所有者权益合计']
-df8.loc['资本公积']=df5.loc['资本公积']
-df8.loc['未分配利润']=df5.loc['未分配利润']
+df8.loc['所有者权益']=df1.loc['所有者权益合计']
+df8.loc['资本公积']=df1.loc['资本公积']
+df8.loc['未分配利润']=df1.loc['未分配利润']
 '''
-df8.loc[list54[-1][0]]=df5.loc[list54[-1][0]]
-df8.loc[list54[-2][0]]=df5.loc[list54[-2][0]]
-df8.loc[list54[-3][0]]=df5.loc[list54[-3][0]]
+df8.loc[list54[-1][0]]=df1.loc[list54[-1][0]]
+df8.loc[list54[-2][0]]=df1.loc[list54[-2][0]]
+df8.loc[list54[-3][0]]=df1.loc[list54[-3][0]]
 '''
 df8=df8.round(1)
 
@@ -147,9 +169,9 @@ df9.loc[list55[-2][0]]=df0.loc[list55[-2][0]].round(1)
 df9.loc[list55[-3][0]]=df0.loc[list55[-3][0]].round(1)
 
 #盈利能力
-df9.loc['营业收入']=df6.loc['一、营业总收入'].round(1)
-df9.loc['营业利润']=df6.loc['三、营业利润（亏损以“－”号填列）'].round(1)
-df9.loc['净利润']=df6.loc['五、净利润（亏损以“－”号填列）'].round(1)
+df9.loc['营业收入']=df2.loc['一、营业总收入'].round(1)
+df9.loc['营业利润']=df2.loc['三、营业利润（亏损以“－”号填列）'].round(1)
+df9.loc['净利润']=df2.loc['五、净利润（亏损以“－”号填列）'].round(1)
 df9.loc['EBIT']=df0.loc['EBIT'].round(2)
 df9.loc['毛利润率']=df0.loc['毛利润率'].apply(lambda x:format(x,'.2%'))
 df9.loc['营业利润率']=df0.loc['营业利润率'].apply(lambda x:format(x,'.2%'))
@@ -157,12 +179,12 @@ df9.loc['净利润率']=df0.loc['净利润率'].apply(lambda x:format(x,'.2%'))
 
 
 #现金流
-df9.loc['经营活动现金流入']=df7.loc['经营活动现金流入小计'].round(1)
-df9.loc['经营活动现金流出']=df7.loc['经营活动现金流出小计'].round(1)
-df9.loc['经营活动净现金流']=df7.loc['经营活动产生的现金流量净额'].round(1)
-df9.loc['投资活动净现金流']=df7.loc['投资活动产生的现金流量净额'].round(1)
-df9.loc['筹资活动净现金流']=df7.loc['筹资活动产生的现金流量净额'].round(1)
-df9.loc['净现金流']=df7.loc['五、现金及现金等价物净增加额'].round(1)
+df9.loc['经营活动现金流入']=df3.loc['经营活动现金流入小计'].round(1)
+df9.loc['经营活动现金流出']=df3.loc['经营活动现金流出小计'].round(1)
+df9.loc['经营活动净现金流']=df3.loc['经营活动产生的现金流量净额'].round(1)
+df9.loc['投资活动净现金流']=df3.loc['投资活动产生的现金流量净额'].round(1)
+df9.loc['筹资活动净现金流']=df3.loc['筹资活动产生的现金流量净额'].round(1)
+df9.loc['净现金流']=df3.loc['五、现金及现金等价物净增加额'].round(1)
 
 
 doc2 = Document()
@@ -173,23 +195,6 @@ df9=df9[df9.columns[-4:]]
 df10=pd.concat([df8.reset_index(),df9.reset_index()],axis=1)
 df10.to_excel('财务简表.xlsx',encoding='gbk')
 
-#平均数
-def avg(list1):
-    avg=sum(list1)/len(list1)
-    return avg
-
-#判断
-def panduan(df9,text9):
-    if df9.loc[text9][-3]<df9.loc[text9][-2]<df9.loc[text9][-1]:
-        commit1 = text9+'持续增加，平均增长率为'+'{:.0%}'.format((((df9.loc[text9][-1]/df9.loc[text9][-3])-1)/2))
-    elif df9.loc[text9][-3]>df9.loc[text9][-2]>df9.loc[text9][-1]:
-        commit1 = text9+'持续下降，平均降幅为'+'{:.0%}'.format((((df9.loc[text9][-1]/df9.loc[text9][-3])-1)/2))
-    elif df9.loc[text9][-3]==df9.loc[text9][-2]==df9.loc[text9][-1]==0:
-        commit1 = '一直为0。'
-    else:
-        num = avg([df9.loc[text9][-3],df9.loc[text9][-2],df9.loc[text9][-1]])
-        commit1 = '在{:.0%}上下波动。'.format(num)
-    return commit1
 
 
 
@@ -206,12 +211,12 @@ else:
     num = avg([df0.loc['资产负债率'][-3],df0.loc['资产负债率'][-2],df0.loc['资产负债率'][-1]])
     commit1 = '在{:.0%}上下波动。'.format(num)
 
-list56=paixu(['资产总计','货币资金','交易性金融资产','应收票据','应收账款','预付账款','其他应收款','存货','待摊费用','一年内到期的非流动资产','其他流动资产','可供出售金融资产', '持有至到期投资', '投资性房地产', '长期股权投资', '长期应收款', '固定资产', '在建工程',  '生产性生物资产', '油气资产', '无形资产', '开发支出', '商誉', '长期待摊费用', '递延所得税资产', '其他非流动资产'],df5)
+list56=paixu(['资产总计','货币资金','交易性金融资产','应收票据','应收账款','预付账款','其他应收款','存货','待摊费用','一年内到期的非流动资产','其他流动资产','可供出售金融资产', '持有至到期投资', '投资性房地产', '长期股权投资', '长期应收款', '固定资产', '在建工程',  '生产性生物资产', '油气资产', '无形资产', '开发支出', '商誉', '长期待摊费用', '递延所得税资产', '其他非流动资产'],df1)
 
 
 t5="借款人近三期流动资产分别为%s、%s和%s万元，在总资产构成中流动资产占比分别%.2f%%、%.2f%%和%.2f%%。主要资产构成为%s、%s、%s、%s、%s，在总资产构成中的占比分别为%.2f%%、%.2f%%、%.2f%%、%.2f%%、%.2f%%。【具体详见重点科目分析】"% (df8.loc['流动资产'][-3],df8.loc['流动资产'][-2],df8.loc['流动资产'][-1],df8.loc['流动资产'][-3]/df8.loc['总资产'][-3]*100,df8.loc['流动资产'][-2]/df8.loc['总资产'][-2]*100,df8.loc['流动资产'][-1]/df8.loc['总资产'][-1]*100,list56[-2][0],list56[-3][0],list56[-4][0],list56[-5][0],list56[-6][0],list56[-2][1]/list56[-1][1]*100,list56[-3][1]/list56[-1][1]*100,list56[-4][1]/list56[-1][1]*100,list56[-5][1]/list56[-1][1]*100,list56[-6][1]/list56[-1][1]*100,)
 
-t2="从债务期限结构看，借款人近三期流动负债分别为%s、%s和%s万元，流动负债占比分别为%.2f%%、%.2f%%和%.2f%%。总体来看，公司偿债能力【较大\在合理范围内\较小，根据实际情况自行评价】。"  % (df5.loc['流动负债合计'][-3],df5.loc['流动负债合计'][-2],df5.loc['流动负债合计'][-1],df5.loc['流动负债合计'][-3]/df5.loc['负债总计'][-3]*100,df5.loc['流动负债合计'][-2]/df5.loc['负债总计'][-2]*100,df5.loc['流动负债合计'][-1]/df5.loc['负债总计'][-1]*100,)
+t2="从债务期限结构看，借款人近三期流动负债分别为%s、%s和%s万元，流动负债占比分别为%.2f%%、%.2f%%和%.2f%%。总体来看，公司偿债能力【较大\在合理范围内\较小，根据实际情况自行评价】。"  % (df1.loc['流动负债合计'][-3],df1.loc['流动负债合计'][-2],df1.loc['流动负债合计'][-1],df1.loc['流动负债合计'][-3]/df1.loc['负债总计'][-3]*100,df1.loc['流动负债合计'][-2]/df1.loc['负债总计'][-2]*100,df1.loc['流动负债合计'][-1]/df1.loc['负债总计'][-1]*100,)
 
 #盈利能力分析
 t3="借款人前三期分别实现营业收入%s、%s和%s万元，%s。毛利率分别为%.2f%%、%.2f%%和%.2f%%，实现净利润%s、%s和%s万元，净利润率分别为%.2f%%、%.2f%%和%.2f%%，总体来看，借款人盈利能力【相对较好/稳定/较弱，根据实际情况自行评价】"  % (df9.loc['营业收入'][-3],df9.loc['营业收入'][-2],df9.loc['营业收入'][-1],panduan(df9,'营业收入'),df0.loc['毛利润率'][-3]*100,df0.loc['毛利润率'][-2]*100,df0.loc['毛利润率'][-1]*100,df9.loc['净利润'][-3],df9.loc['净利润'][-2],df9.loc['净利润'][-1],df0.loc['净利润率'][-3]*100,df0.loc['净利润率'][-2]*100,df0.loc['净利润率'][-1]*100)
@@ -222,7 +227,7 @@ t6="借款人近三期现金周期分别为%s、%s和%s。其中最新一期%s�
 
 
 #现金流量情况
-t4="借款人近三期分别实现净现金流入%s、%s和%s万元。其中：经营活动现金净流入%s、%s和%s万元；投资活动现金净流入%s、%s和%s万元；筹资活动现金净流入%s、%s和%s万元。总体来看，借款人现金流情况【请根据实际情况自行评价】" % (df7.loc['五、现金及现金等价物净增加额'][-3].round(1),df7.loc['五、现金及现金等价物净增加额'][-2].round(1),df7.loc['五、现金及现金等价物净增加额'][-1].round(1),df9.loc['经营活动净现金流'][-3],df9.loc['经营活动净现金流'][-2],df9.loc['经营活动净现金流'][-1],df9.loc['投资活动净现金流'][-3],df9.loc['投资活动净现金流'][-2],df9.loc['投资活动净现金流'][-1],df9.loc['筹资活动净现金流'][-3],df9.loc['筹资活动净现金流'][-2],df9.loc['筹资活动净现金流'][-1],)
+t4="借款人近三期分别实现净现金流入%s、%s和%s万元。其中：经营活动现金净流入%s、%s和%s万元；投资活动现金净流入%s、%s和%s万元；筹资活动现金净流入%s、%s和%s万元。总体来看，借款人现金流情况【请根据实际情况自行评价】" % (df3.loc['五、现金及现金等价物净增加额'][-3].round(1),df3.loc['五、现金及现金等价物净增加额'][-2].round(1),df3.loc['五、现金及现金等价物净增加额'][-1].round(1),df9.loc['经营活动净现金流'][-3],df9.loc['经营活动净现金流'][-2],df9.loc['经营活动净现金流'][-1],df9.loc['投资活动净现金流'][-3],df9.loc['投资活动净现金流'][-2],df9.loc['投资活动净现金流'][-1],df9.loc['筹资活动净现金流'][-3],df9.loc['筹资活动净现金流'][-2],df9.loc['筹资活动净现金流'][-1],)
 
 #小结
 t7="整体来看，借款人偿债能力【】，盈利能力【】，运营能力【】，现金流情况【】，整体财务状况【】。"
