@@ -32,7 +32,7 @@ if df2.columns[-1][-1]=='月':
         elif df2.columns[-1][-3]=='1':
             df2[df2.columns[-1]]=df2[df2.columns[-1]]*12/12
     else:
-        df2[df2.columns[-1]]=df2[df2.columns[-1]]*12/df2.columns[-1][-2]
+        df2[df2.columns[-1]]=df2[df2.columns[-1]]*12/int(df2.columns[-1][-2])
 else:
     pass
 
